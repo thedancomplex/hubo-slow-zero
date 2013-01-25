@@ -236,14 +236,14 @@ int main(int argc, char **argv) {
 	int c;
 
 
-	char* ach_chan = HUBO_CHAN_REF_FILTER_NAME;
+	char* ach_chan = HUBO_CHAN_REF_NAME;
 	int i = 1;
 	while(argc > i) {
 		if(strcmp(argv[i], "-d") == 0) {
 			debug = 1;
 		}
-		if(strcmp(argv[i], "-r") == 0) {
-			ach_chan = HUBO_CHAN_REF_NAME;
+		if(strcmp(argv[i], "-f") == 0) {
+			ach_chan = HUBO_CHAN_REF_FILTER_NAME;
 		}
 		i++;
 	}
@@ -275,23 +275,6 @@ int main(int argc, char **argv) {
 	r = ach_open(&chan_hubo_state, HUBO_CHAN_STATE_NAME , NULL);
 	assert( ACH_OK == r );
 
-
-        // get initial values for hubo
-        struct hubo_ref H_ref;
-        struct hubo_init_cmd H_init;
-        struct hubo_state H_state;
-        struct hubo_param H_param;
-        memset( &H_ref,   0, sizeof(H_ref));
-        memset( &H_init,  0, sizeof(H_init));
-        memset( &H_state, 0, sizeof(H_state));
-        memset( &H_param, 0, sizeof(H_param));
-
-        usleep(250000);
-
-        // set default values for Hubo
-        //setJointParams(&H_param, &H_state);
-
-        //huboLoop(&H_param);
         huboLoop();
 
 	pause();
