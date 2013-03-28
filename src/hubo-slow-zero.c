@@ -128,11 +128,13 @@ int debug = 0;
 int hubo_debug = 0;
 
 //void huboLoop(struct hubo_param *H_param) {
-void huboLoop() {
+void huboLoop(double etime) {
 	// get initial values for hubo
 	struct hubo_ref H_ref;
+	struct hubo_ref H_ref_delta;
 	struct hubo_state H_state;
 	memset( &H_ref,   0, sizeof(H_ref));
+	memset( &H_ref_delta,   0, sizeof(H_ref_delta));
 	memset( &H_state, 0, sizeof(H_state));
 
 	size_t fs;
@@ -169,32 +171,31 @@ void huboLoop() {
 	// get current time
 	//clock_gettime( CLOCK_MONOTONIC,&t);
 	clock_gettime( 0,&t);
+	/* Get latest ACH message */
+	r = ach_get( &chan_hubo_state, &H_state, sizeof(H_state), &fs, NULL, ACH_O_LAST );
+	if(ACH_OK != r) {
+		if(hubo_debug) {
+			printf("State r = %s\n",ach_result_to_string(r));}
+		}
+	else{   assert( sizeof(H_state) == fs ); }
+	for( i < HUBO_JOINT_COUNT ){
+		H_ref.ref[i] = H_state.joint[i].pos;
+		H_ref_delta[i] = H_ref.ref[i]/(etime/T)
+	}
+
+
 
 	while(1) {
 		// wait until next shot
 		clock_nanosleep(0,TIMER_ABSTIME,&t, NULL);
 
-		/* Get latest ACH message */
-		r = ach_get( &chan_hubo_ref, &H_ref, sizeof(H_ref), &fs, NULL, ACH_O_LAST );
-		if(ACH_OK != r) {
-			if(hubo_debug) {
-				printf("Ref r = %s\n",ach_result_to_string(r));}
-			}
-		else{   assert( sizeof(H_ref) == fs ); }
-		r = ach_get( &chan_hubo_state, &H_state, sizeof(H_state), &fs, NULL, ACH_O_LAST );
-		if(ACH_OK != r) {
-			if(hubo_debug) {
-				printf("State r = %s\n",ach_result_to_string(r));}
-			}
-		else{   assert( sizeof(H_state) == fs ); }
 
 // ------------------------------------------------------------------------------
 // ---------------[ DO NOT EDIT AVBOE THIS LINE]---------------------------------
 // ------------------------------------------------------------------------------
-
-
-			H_ref.ref[LEB] = -1.0;
-			double encLEB = H_state.joint[LEB].pos;
+		for( i < HUBO_JOINT_COUNT ){
+			H_ref.ref[i] = H_ref.ref[i] - H_ref_delta.ref[i];
+		}
 
 // ------------------------------------------------------------------------------
 // ---------------[ DO NOT EDIT BELOW THIS LINE]---------------------------------
